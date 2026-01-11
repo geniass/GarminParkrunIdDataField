@@ -1,0 +1,10 @@
+samples/
+bin/
+*.prg
+*.prg.debug.xml
+gen/
+*-mir/
+*.pyc
+__pycache__/
+.DS_Store
+/tmp/qr_ref_*.png
