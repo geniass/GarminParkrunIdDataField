@@ -1,1 +1,11 @@
+# QR Code App - supports both data field and standalone watch app builds
+#
+# Build data field:  monkeyc ... (default, excludes watch app code)
+# Build watch app:   monkeyc ... -x exclude_when_watchapp
+#
+# The manifest must also be switched for watch app builds
+
 project.manifest = manifest.xml
+
+# Default build excludes watch app code (builds data field)
+base.excludeAnnotations = exclude_when_datafield

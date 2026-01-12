@@ -1,4 +1,6 @@
+developer_key
 samples/
+mir/
 bin/
 *.prg
 *.prg.debug.xml
@@ -8,3 +10,4 @@ gen/
 __pycache__/
 .DS_Store
 /tmp/qr_ref_*.png
+*.zip

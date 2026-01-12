@@ -1,5 +1,6 @@
 import Toybox.Lang;
 import Toybox.Math;
+import Toybox.System;
 
 // QR Code encoder class
 // Implements QR code generation with alphanumeric encoding and error correction
@@ -23,6 +24,13 @@ class QRCodeEncoder {
     // Matrix size
     private var mSize as Number;
 
+    // Function module mask (pre-computed to avoid repeated checks)
+    private var mFunctionMask as Array<Array<Boolean> >?;
+
+    // Cached generator polynomial (avoid regenerating for same ECC count)
+    private static var sCachedGenerator as Array<Number>?;
+    private static var sCachedGeneratorECC as Number = 0;
+
     // Alphanumeric character set
     private const ALPHANUMERIC_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
 
@@ -33,6 +41,7 @@ class QRCodeEncoder {
         mVersion = version;
         mErrorLevel = errorLevel;
         mSize = 21 + (version - 1) * 4; // Size formula: 21 + (version - 1) * 4
+        mFunctionMask = null;
 
         // Initialize matrix with all false (white)
         mMatrix = new Array<Array<Boolean> >[mSize];
@@ -48,34 +57,57 @@ class QRCodeEncoder {
     // @param data The string to encode
     // @return True if successful, false otherwise
     function encode(data as String) as Boolean {
+        System.println("QR: encode() start - data length: " + data.length());
+
         // Convert to uppercase for alphanumeric mode
         data = data.toUpper();
 
         // Check if data fits in alphanumeric mode
         if (!isAlphanumeric(data)) {
+            System.println("QR: encode() failed - not alphanumeric");
             return false;
         }
+        System.println("QR: alphanumeric check passed");
 
         // Add function patterns FIRST (before data placement)
+        System.println("QR: adding finder patterns...");
         addFinderPatterns();
+        System.println("QR: adding alignment pattern...");
         addAlignmentPattern();
+        System.println("QR: adding timing patterns...");
         addTimingPatterns();
+        System.println("QR: adding dark module...");
         addDarkModule();
 
+        // Build function mask ONCE after all function patterns are placed
+        System.println("QR: building function mask...");
+        buildFunctionMask();
+        System.println("QR: function mask complete");
+
         // Build the data bits
+        System.println("QR: building data bits...");
         var bits = buildDataBits(data);
+        System.println("QR: data bits complete - " + bits.size() + " bits");
 
         // Add error correction
+        System.println("QR: adding error correction...");
         bits = addErrorCorrection(bits);
+        System.println("QR: error correction complete - " + bits.size() + " bits");
 
         // Place data in matrix (avoiding function patterns)
+        System.println("QR: placing data bits in matrix...");
         placeDataBits(bits);
+        System.println("QR: data placement complete");
 
         // Apply mask pattern (only to non-function modules)
+        System.println("QR: applying mask pattern...");
         applyBestMask();
+        System.println("QR: mask complete");
 
         // Add format information (goes over mask)
+        System.println("QR: adding format info...");
         addFormatInfo();
+        System.println("QR: encode() complete");
 
         return true;
     }
@@ -91,16 +123,19 @@ class QRCodeEncoder {
         return true;
     }
 
-    // Build data bits from input string
+    // Build data bits from input string (pre-allocated for performance)
     private function buildDataBits(data as String) as Array<Boolean> {
-        var bits = [] as Array<Boolean>;
+        var capacity = getDataCapacity();
+        // Pre-allocate array to final size to avoid repeated resizing
+        var bits = new Array<Boolean>[capacity];
+        var bitIndex = 0;
 
         // Mode indicator (0010 = alphanumeric)
-        addBits(bits, 2, 4);
+        bitIndex = addBitsAt(bits, bitIndex, 2, 4);
 
         // Character count
         var countBits = getCountBits();
-        addBits(bits, data.length(), countBits);
+        bitIndex = addBitsAt(bits, bitIndex, data.length(), countBits);
 
         // Encode data in pairs
         for (var i = 0; i < data.length(); i += 2) {
@@ -108,35 +143,36 @@ class QRCodeEncoder {
                 // Encode pair
                 var val1 = getAlphanumericValue(data.substring(i, i + 1));
                 var val2 = getAlphanumericValue(data.substring(i + 1, i + 2));
-                addBits(bits, val1 * 45 + val2, 11);
+                bitIndex = addBitsAt(bits, bitIndex, val1 * 45 + val2, 11);
             } else {
                 // Encode single character
                 var val = getAlphanumericValue(data.substring(i, i + 1));
-                addBits(bits, val, 6);
+                bitIndex = addBitsAt(bits, bitIndex, val, 6);
             }
         }
 
-        // Terminator (0000)
-        var capacity = getDataCapacity();
-        var remaining = capacity - bits.size();
+        // Terminator (0000) - up to 4 bits
+        var remaining = capacity - bitIndex;
         if (remaining > 4) {
             remaining = 4;
         }
         for (var i = 0; i < remaining; i++) {
-            bits.add(false);
+            bits[bitIndex] = false;
+            bitIndex++;
         }
 
         // Pad to byte boundary
-        while (bits.size() % 8 != 0) {
-            bits.add(false);
+        while (bitIndex % 8 != 0) {
+            bits[bitIndex] = false;
+            bitIndex++;
         }
 
         // Add padding bytes (11101100 and 00010001)
         var padBytes = [236, 17];
-        var padIndex = 0;
-        while (bits.size() < capacity) {
-            addBits(bits, padBytes[padIndex], 8);
-            padIndex = (padIndex + 1) % 2;
+        var padIdx = 0;
+        while (bitIndex < capacity) {
+            bitIndex = addBitsAt(bits, bitIndex, padBytes[padIdx], 8);
+            padIdx = (padIdx + 1) % 2;
         }
 
         return bits;
@@ -151,11 +187,13 @@ class QRCodeEncoder {
         return 0;
     }
 
-    // Add bits to array
-    private function addBits(bits as Array<Boolean>, value as Number, length as Number) as Void {
+    // Add bits to pre-allocated array at specified index, returns new index
+    private function addBitsAt(bits as Array<Boolean>, index as Number, value as Number, length as Number) as Number {
         for (var i = length - 1; i >= 0; i--) {
-            bits.add((value & (1 << i)) != 0);
+            bits[index] = (value & (1 << i)) != 0;
+            index++;
         }
+        return index;
     }
 
     // Get number of bits for character count based on version
@@ -255,14 +293,23 @@ class QRCodeEncoder {
         return result;
     }
 
-    // Generate Reed-Solomon generator polynomial
+    // Generate Reed-Solomon generator polynomial (cached for performance)
     private function generateGeneratorPolynomial(numECC as Number) as Array<Number> {
+        // Return cached polynomial if available for same ECC count
+        if (sCachedGenerator != null && sCachedGeneratorECC == numECC) {
+            return sCachedGenerator;
+        }
+
         var gen = [1] as Array<Number>;
 
         for (var i = 0; i < numECC; i++) {
             var term = [1, GF_EXP[i]] as Array<Number>;
             gen = polyMultiply(gen, term);
         }
+
+        // Cache the result
+        sCachedGenerator = gen;
+        sCachedGeneratorECC = numECC;
 
         return gen;
     }
@@ -399,30 +446,13 @@ class QRCodeEncoder {
         }
     }
 
-    // Check if module is a function pattern
+    // Check if module is a function pattern (uses pre-computed mask for O(1) lookup)
     private function isFunctionModule(row as Number, col as Number) as Boolean {
-        // Finder patterns (3 corners) with separators
-        if (row < 9 && col < 9) { return true; } // Top-left
-        if (row < 9 && col >= mSize - 8) { return true; } // Top-right
-        if (row >= mSize - 8 && col < 9) { return true; } // Bottom-left
-
-        // Timing patterns
-        if (row == 6 || col == 6) { return true; }
-
-        // Alignment pattern (for version 2+)
-        // Version 2 has alignment pattern centered at (18, 18)
-        if (mVersion >= 2) {
-            var alignCenter = getAlignmentPatternCenter();
-            if (alignCenter > 0) {
-                var dr = row - alignCenter;
-                var dc = col - alignCenter;
-                if (dr >= -2 && dr <= 2 && dc >= -2 && dc <= 2) {
-                    return true;
-                }
-            }
+        if (mFunctionMask != null) {
+            return mFunctionMask[row][col];
         }
-
-        return false;
+        // Fallback to slow path if mask not yet built
+        return isFunctionModuleSlow(row, col);
     }
 
     // Get alignment pattern center position for version 2
@@ -503,6 +533,42 @@ class QRCodeEncoder {
     // Add dark module (always at position (4*version + 9, 8))
     private function addDarkModule() as Void {
         mMatrix[4 * mVersion + 9][8] = true;
+    }
+
+    // Build function module mask (pre-compute to avoid repeated checks in O(n²) loops)
+    private function buildFunctionMask() as Void {
+        mFunctionMask = new Array<Array<Boolean> >[mSize];
+        for (var i = 0; i < mSize; i++) {
+            mFunctionMask[i] = new Array<Boolean>[mSize];
+            for (var j = 0; j < mSize; j++) {
+                mFunctionMask[i][j] = isFunctionModuleSlow(i, j);
+            }
+        }
+    }
+
+    // Original function module check (used once to build the mask)
+    private function isFunctionModuleSlow(row as Number, col as Number) as Boolean {
+        // Finder patterns (3 corners) with separators
+        if (row < 9 && col < 9) { return true; } // Top-left
+        if (row < 9 && col >= mSize - 8) { return true; } // Top-right
+        if (row >= mSize - 8 && col < 9) { return true; } // Bottom-left
+
+        // Timing patterns
+        if (row == 6 || col == 6) { return true; }
+
+        // Alignment pattern (for version 2+)
+        if (mVersion >= 2) {
+            var alignCenter = getAlignmentPatternCenter();
+            if (alignCenter > 0) {
+                var dr = row - alignCenter;
+                var dc = col - alignCenter;
+                if (dr >= -2 && dr <= 2 && dc >= -2 && dc <= 2) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     // Mask pattern to use (5 is commonly selected by QR generators)

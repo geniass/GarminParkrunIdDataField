@@ -1,0 +1,5 @@
+# Watch app build configuration
+project.manifest = manifest-watchapp.xml
+
+# Exclude data field code, include watch app code
+base.excludeAnnotations = exclude_when_watchapp
