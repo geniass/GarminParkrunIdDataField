@@ -6,6 +6,9 @@ import Toybox.System;
 // Implements QR code generation with alphanumeric encoding and error correction
 class QRCodeEncoder {
 
+    // Debug logging flag (set to false for production)
+    private static const DEBUG = false;
+
     // Error correction levels (static constants)
     static const ERROR_LEVEL_L = 0;
     static const ERROR_LEVEL_M = 1;
@@ -57,57 +60,57 @@ class QRCodeEncoder {
     // @param data The string to encode
     // @return True if successful, false otherwise
     function encode(data as String) as Boolean {
-        System.println("QR: encode() start - data length: " + data.length());
+        if (DEBUG) { System.println("QR: encode() start - data length: " + data.length()); }
 
         // Convert to uppercase for alphanumeric mode
         data = data.toUpper();
 
         // Check if data fits in alphanumeric mode
         if (!isAlphanumeric(data)) {
-            System.println("QR: encode() failed - not alphanumeric");
+            if (DEBUG) { System.println("QR: encode() failed - not alphanumeric"); }
             return false;
         }
-        System.println("QR: alphanumeric check passed");
+        if (DEBUG) { System.println("QR: alphanumeric check passed"); }
 
         // Add function patterns FIRST (before data placement)
-        System.println("QR: adding finder patterns...");
+        if (DEBUG) { System.println("QR: adding finder patterns..."); }
         addFinderPatterns();
-        System.println("QR: adding alignment pattern...");
+        if (DEBUG) { System.println("QR: adding alignment pattern..."); }
         addAlignmentPattern();
-        System.println("QR: adding timing patterns...");
+        if (DEBUG) { System.println("QR: adding timing patterns..."); }
         addTimingPatterns();
-        System.println("QR: adding dark module...");
+        if (DEBUG) { System.println("QR: adding dark module..."); }
         addDarkModule();
 
         // Build function mask ONCE after all function patterns are placed
-        System.println("QR: building function mask...");
+        if (DEBUG) { System.println("QR: building function mask..."); }
         buildFunctionMask();
-        System.println("QR: function mask complete");
+        if (DEBUG) { System.println("QR: function mask complete"); }
 
         // Build the data bits
-        System.println("QR: building data bits...");
+        if (DEBUG) { System.println("QR: building data bits..."); }
         var bits = buildDataBits(data);
-        System.println("QR: data bits complete - " + bits.size() + " bits");
+        if (DEBUG) { System.println("QR: data bits complete - " + bits.size() + " bits"); }
 
         // Add error correction
-        System.println("QR: adding error correction...");
+        if (DEBUG) { System.println("QR: adding error correction..."); }
         bits = addErrorCorrection(bits);
-        System.println("QR: error correction complete - " + bits.size() + " bits");
+        if (DEBUG) { System.println("QR: error correction complete - " + bits.size() + " bits"); }
 
         // Place data in matrix (avoiding function patterns)
-        System.println("QR: placing data bits in matrix...");
+        if (DEBUG) { System.println("QR: placing data bits in matrix..."); }
         placeDataBits(bits);
-        System.println("QR: data placement complete");
+        if (DEBUG) { System.println("QR: data placement complete"); }
 
         // Apply mask pattern (only to non-function modules)
-        System.println("QR: applying mask pattern...");
+        if (DEBUG) { System.println("QR: applying mask pattern..."); }
         applyBestMask();
-        System.println("QR: mask complete");
+        if (DEBUG) { System.println("QR: mask complete"); }
 
         // Add format information (goes over mask)
-        System.println("QR: adding format info...");
+        if (DEBUG) { System.println("QR: adding format info..."); }
         addFormatInfo();
-        System.println("QR: encode() complete");
+        if (DEBUG) { System.println("QR: encode() complete"); }
 
         return true;
     }

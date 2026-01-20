@@ -9,7 +9,11 @@ typedef QREncodeCallback as Method(encoder as QRCodeEncoder?) as Void;
 
 // Chunked QR Code encoder that splits work across timer callbacks
 // to avoid watchdog timeout on slow devices
+// This is not allowed in data fields annoyingly.
 class QRCodeEncoderChunked {
+
+    // Debug logging flag (set to false for production)
+    private static const DEBUG = false;
 
     // Encoding states
     private enum {
@@ -75,7 +79,7 @@ class QRCodeEncoderChunked {
     // @param errorLevel Error correction level
     // @param callback Called when encoding completes (with encoder or null on error)
     function startEncode(data as String, version as Number, errorLevel as Number, callback as QREncodeCallback) as Void {
-        System.println("QR Chunked: startEncode() - " + data);
+        if (DEBUG) { System.println("QR Chunked: startEncode() - " + data); }
 
         // Cancel any existing encoding
         stopEncode();
@@ -87,7 +91,7 @@ class QRCodeEncoderChunked {
 
         // Validate input
         if (!isAlphanumeric(mData)) {
-            System.println("QR Chunked: not alphanumeric, failing");
+            if (DEBUG) { System.println("QR Chunked: not alphanumeric, failing"); }
             mState = STATE_ERROR;
             invokeCallback(null);
             return;
@@ -103,7 +107,7 @@ class QRCodeEncoderChunked {
         mTimer = new Timer.Timer();
         mTimer.start(method(:onTimerTick), TIMER_INTERVAL, true);
 
-        System.println("QR Chunked: timer started");
+        if (DEBUG) { System.println("QR Chunked: timer started"); }
     }
 
     // Stop encoding (cancel if in progress)
@@ -134,7 +138,7 @@ class QRCodeEncoderChunked {
 
     // Timer callback - process next chunk of work
     function onTimerTick() as Void {
-        System.println("QR Chunked: tick - state=" + mState);
+        if (DEBUG) { System.println("QR Chunked: tick - state=" + mState); }
 
         switch (mState) {
             case STATE_INIT_MATRIX:
@@ -183,13 +187,13 @@ class QRCodeEncoderChunked {
     // State handlers - each does a small chunk of work
 
     private function doInitMatrix() as Void {
-        System.println("QR Chunked: init matrix complete");
+        if (DEBUG) { System.println("QR Chunked: init matrix complete"); }
         // Matrix is initialized in constructor, move to next state
         mState = STATE_FINDER_PATTERNS;
     }
 
     private function doFinderPatterns() as Void {
-        System.println("QR Chunked: adding finder patterns");
+        if (DEBUG) { System.println("QR Chunked: adding finder patterns"); }
         if (mEncoder != null) {
             // Use internal method via encode step
             addFinderPatternsToEncoder();
@@ -198,7 +202,7 @@ class QRCodeEncoderChunked {
     }
 
     private function doAlignment() as Void {
-        System.println("QR Chunked: adding alignment");
+        if (DEBUG) { System.println("QR Chunked: adding alignment"); }
         if (mEncoder != null) {
             addAlignmentPatternToEncoder();
         }
@@ -206,7 +210,7 @@ class QRCodeEncoderChunked {
     }
 
     private function doTiming() as Void {
-        System.println("QR Chunked: adding timing");
+        if (DEBUG) { System.println("QR Chunked: adding timing"); }
         if (mEncoder != null) {
             addTimingPatternsToEncoder();
             addDarkModuleToEncoder();
@@ -215,7 +219,7 @@ class QRCodeEncoderChunked {
     }
 
     private function doFunctionMask() as Void {
-        System.println("QR Chunked: building function mask");
+        if (DEBUG) { System.println("QR Chunked: building function mask"); }
         if (mEncoder != null) {
             buildFunctionMaskForEncoder();
         }
@@ -223,25 +227,25 @@ class QRCodeEncoderChunked {
     }
 
     private function doBuildData() as Void {
-        System.println("QR Chunked: building data bits");
+        if (DEBUG) { System.println("QR Chunked: building data bits"); }
         if (mEncoder != null) {
             mBits = buildDataBitsForEncoder();
-            System.println("QR Chunked: data bits = " + mBits.size());
+            if (DEBUG) { System.println("QR Chunked: data bits = " + mBits.size()); }
         }
         mState = STATE_ERROR_CORRECTION;
     }
 
     private function doErrorCorrection() as Void {
-        System.println("QR Chunked: adding error correction");
+        if (DEBUG) { System.println("QR Chunked: adding error correction"); }
         if (mEncoder != null && mBits != null) {
             mBits = addErrorCorrectionForEncoder(mBits);
-            System.println("QR Chunked: with ECC = " + mBits.size());
+            if (DEBUG) { System.println("QR Chunked: with ECC = " + mBits.size()); }
         }
         mState = STATE_PLACE_DATA;
     }
 
     private function doPlaceData() as Void {
-        System.println("QR Chunked: placing data");
+        if (DEBUG) { System.println("QR Chunked: placing data"); }
         if (mEncoder != null && mBits != null) {
             placeDataBitsInEncoder(mBits);
         }
@@ -249,7 +253,7 @@ class QRCodeEncoderChunked {
     }
 
     private function doApplyMask() as Void {
-        System.println("QR Chunked: applying mask");
+        if (DEBUG) { System.println("QR Chunked: applying mask"); }
         if (mEncoder != null) {
             applyMaskToEncoder();
         }
@@ -257,11 +261,11 @@ class QRCodeEncoderChunked {
     }
 
     private function doFormatInfo() as Void {
-        System.println("QR Chunked: adding format info");
+        if (DEBUG) { System.println("QR Chunked: adding format info"); }
         if (mEncoder != null) {
             addFormatInfoToEncoder();
         }
-        System.println("QR Chunked: COMPLETE");
+        if (DEBUG) { System.println("QR Chunked: COMPLETE"); }
         mState = STATE_COMPLETE;
     }
 
