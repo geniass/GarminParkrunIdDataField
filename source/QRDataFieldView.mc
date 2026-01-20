@@ -45,7 +45,8 @@ class QRDataFieldView extends WatchUi.DataField {
 
         // Encode QR if needed (synchronous - data fields can't use timers)
         if (mQRNeedsUpdate || mEncoder == null) {
-            mEncoder = QRViewDelegate.createEncoder(mQRData, 2, QRCodeEncoder.ERROR_LEVEL_L);
+            // Have to use Version 1 (21x21) due to data field processing time constraints
+            mEncoder = QRViewDelegate.createEncoder(mQRData, 1, QRCodeEncoder.ERROR_LEVEL_L);
             if (mEncoder != null) {
                 mRenderer = new QRCodeRenderer(mEncoder);
                 mQRNeedsUpdate = false;
