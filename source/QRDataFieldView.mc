@@ -3,14 +3,16 @@ import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.WatchUi;
 
+using QRCode;
+
 // QR Code Data Field View
 // Displays QR code as a data field during activities
 // Note: Data fields cannot use Timers, so this uses synchronous encoding
 class QRDataFieldView extends WatchUi.DataField {
 
     // QR code components
-    hidden var mEncoder as QRCodeEncoder?;
-    hidden var mRenderer as QRCodeRenderer?;
+    hidden var mEncoder as QRCode.Encoder?;
+    hidden var mRenderer as QRCode.Renderer?;
 
     // QR code data
     hidden var mQRData as String;
@@ -46,9 +48,9 @@ class QRDataFieldView extends WatchUi.DataField {
         // Encode QR if needed (synchronous - data fields can't use timers)
         if (mQRNeedsUpdate || mEncoder == null) {
             // Have to use Version 1 (21x21) due to data field processing time constraints
-            mEncoder = QRViewDelegate.createEncoder(mQRData, 1, QRCodeEncoder.ERROR_LEVEL_L);
+            mEncoder = QRViewDelegate.createEncoder(mQRData, 1, QRCode.Encoder.ERROR_LEVEL_L);
             if (mEncoder != null) {
-                mRenderer = new QRCodeRenderer(mEncoder);
+                mRenderer = new QRCode.Renderer(mEncoder);
                 mQRNeedsUpdate = false;
             } else {
                 QRViewDelegate.drawError(dc, "QR Error", fgColor, bgColor);

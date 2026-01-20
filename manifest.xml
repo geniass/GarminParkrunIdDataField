@@ -26,11 +26,15 @@
             Use "Monkey C: Edit Languages" from the Visual Studio Code command
             palette to edit your compatible language list.
         -->
-        <iq:languages/>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
         <!--
             Use "Monkey C: Configure Monkey Barrel" from the Visual Studio Code
             command palette to edit the included barrels.
         -->
-        <iq:barrels/>
+        <iq:barrels>
+            <iq:depends name="QRCode" version="1.0.0"/>
+        </iq:barrels>
     </iq:application>
 </iq:manifest>

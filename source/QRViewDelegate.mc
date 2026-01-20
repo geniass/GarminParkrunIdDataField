@@ -1,6 +1,8 @@
 import Toybox.Graphics;
 import Toybox.Lang;
 
+using QRCode;
+
 // Shared QR code display logic used by both data field and standalone app views
 // This module contains the common rendering functionality
 module QRViewDelegate {
@@ -14,7 +16,7 @@ module QRViewDelegate {
     // @param data The data string to display as label
     // @param fgColor Foreground color
     // @param bgColor Background color
-    function renderQRCode(dc as Dc, encoder as QRCodeEncoder?, renderer as QRCodeRenderer?,
+    function renderQRCode(dc as Dc, encoder as QRCode.Encoder?, renderer as QRCode.Renderer?,
                           data as String, fgColor as ColorValue, bgColor as ColorValue) as Boolean {
         if (encoder == null || renderer == null) {
             return false;
@@ -33,8 +35,8 @@ module QRViewDelegate {
     // @param version QR code version (1-3)
     // @param errorLevel Error correction level
     // @return The encoder if successful, null otherwise
-    function createEncoder(data as String, version as Number, errorLevel as Number) as QRCodeEncoder? {
-        var encoder = new QRCodeEncoder(version, errorLevel);
+    function createEncoder(data as String, version as Number, errorLevel as Number) as QRCode.Encoder? {
+        var encoder = new QRCode.Encoder(version, errorLevel);
         if (encoder.encode(data)) {
             return encoder;
         }
