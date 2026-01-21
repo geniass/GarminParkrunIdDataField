@@ -22,6 +22,13 @@ class QRDataFieldView extends WatchUi.DataField {
     hidden var mLastWidth as Number = 0;
     hidden var mLastHeight as Number = 0;
 
+    // Minimum size for a scannable QR code (pixels)
+    // Version 1 QR = 21 modules + 4 quiet zone = 25, need ~4px per module minimum
+    // Min size here is slightly bigger to allow some margin
+    // TODO: handle layouts where width != height
+    hidden const MIN_QR_SIZE = 150;
+    hidden var mTooSmall as Boolean = false;
+
     function initialize(qrData as String) {
         DataField.initialize();
 
@@ -45,6 +52,13 @@ class QRDataFieldView extends WatchUi.DataField {
         mLastWidth = width;
         mLastHeight = height;
 
+        // Check if field is too small for a scannable QR code
+        var minDimension = (width < height) ? width : height;
+        mTooSmall = (minDimension < MIN_QR_SIZE);
+        if (mTooSmall) {
+            System.println("QRDataFieldView: Field too small (" + minDimension + "px < " + MIN_QR_SIZE + "px)");
+            return;
+        }
 
         // Only create encoder/renderer once
         if (mEncoder == null) {
@@ -66,6 +80,12 @@ class QRDataFieldView extends WatchUi.DataField {
         var bgColor = getBackgroundColor();
         var fgColor = (bgColor == Graphics.COLOR_BLACK) ?
             Graphics.COLOR_WHITE : Graphics.COLOR_BLACK;
+
+        // Show message if field is too small for scannable QR code
+        if (mTooSmall) {
+            QRViewDelegate.drawError(dc, "Use single\nfield layout", fgColor, bgColor);
+            return;
+        }
 
         // Encode QR if needed (synchronous - data fields can't use timers)
         if (mQRNeedsUpdate || mEncoder == null) {
