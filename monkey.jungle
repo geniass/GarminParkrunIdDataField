@@ -1,13 +1,5 @@
-# QR Code App - supports both data field and standalone watch app builds
-#
-# Build data field:  monkeyc ... (default, excludes watch app code)
-#
-# The manifest must also be switched for watch app builds
-
+# QR Code Data Field For Parkrun
 project.manifest = manifest.xml
-
-# Default build excludes watch app code (builds data field)
-# base.excludeAnnotations = exclude_when_datafield
 
 # QR Code barrel (shared library)
 base.barrelPath = ../qr-code-barrel/barrel.jungle

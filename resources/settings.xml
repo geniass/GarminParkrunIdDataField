@@ -1,0 +1,5 @@
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <setting propertyKey="@Properties.userId" title="@Strings.ParkrunIdTitle">
+        <settingConfig type="alphaNumeric" maxLength="20" />
+    </setting>
+</settings>

@@ -1,9 +1,11 @@
 import Toybox.Application;
+import Toybox.Application.Properties;
 import Toybox.Lang;
 import Toybox.WatchUi;
 
 // Data field app entry point
 class qr_data_fieldApp extends Application.AppBase {
+    hidden var mView as QRDataFieldView?;
 
     function initialize() {
         AppBase.initialize();
@@ -16,7 +18,25 @@ class qr_data_fieldApp extends Application.AppBase {
     }
 
     function getInitialView() as [Views] or [Views, InputDelegates] {
-        return [ new QRDataFieldView("A3163889") ];
+        // TODO: show a different view if no user ID is set
+        var userId = Properties.getValue("userId") as String?;
+        if (userId == null || userId.length() == 0) {
+            userId = "NO ID SET";
+        }
+        mView = new QRDataFieldView(userId);
+        return [mView];
+    }
+
+    // Called when settings are changed in Garmin Connect Mobile
+    function onSettingsChanged() as Void {
+        var userId = Properties.getValue("userId") as String?;
+        if (userId == null || userId.length() == 0) {
+            userId = "NO ID SET";
+        }
+        if (mView != null) {
+            mView.setQRData(userId);
+        }
+        WatchUi.requestUpdate();
     }
 }
 
