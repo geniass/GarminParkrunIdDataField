@@ -18,6 +18,10 @@ class QRDataFieldView extends WatchUi.DataField {
     hidden var mQRData as String;
     hidden var mQRNeedsUpdate as Boolean;
 
+    // Track layout dimensions to avoid redundant reinitializations
+    hidden var mLastWidth as Number = 0;
+    hidden var mLastHeight as Number = 0;
+
     function initialize(qrData as String) {
         DataField.initialize();
 
@@ -29,14 +33,27 @@ class QRDataFieldView extends WatchUi.DataField {
 
     // Called when layout changes
     function onLayout(dc as Dc) as Void {
-        System.println("QRDataFieldView: onLayout called");
-        // Only invalidate render cache, don't re-encode
-        mEncoder = new QRCode.Encoder(1, QRCode.Encoder.ERROR_LEVEL_L);
-        mRenderer = new QRCode.Renderer(mEncoder);
+        var width = dc.getWidth();
+        var height = dc.getHeight();
 
-        if (mRenderer != null) {
-            mRenderer.invalidateCache();
+        // Only process if dimensions actually changed
+        if (width == mLastWidth && height == mLastHeight) {
+            return;
+        }
+
+        System.println("QRDataFieldView: onLayout " + width + "x" + height);
+        mLastWidth = width;
+        mLastHeight = height;
+
+
+        // Only create encoder/renderer once
+        if (mEncoder == null) {
+            mEncoder = new QRCode.Encoder(1, QRCode.Encoder.ERROR_LEVEL_L);
+            mRenderer = new QRCode.Renderer(mEncoder);
             mRenderer.calculateLayout(dc);
+        } else {
+            // Dimensions changed - invalidate render cache
+            mRenderer.invalidateCache();
         }
     }
 
@@ -46,7 +63,6 @@ class QRDataFieldView extends WatchUi.DataField {
 
     // Render the QR code
     function onUpdate(dc as Dc) as Void {
-        System.println("QRDataFieldView: onUpdate called");
         var bgColor = getBackgroundColor();
         var fgColor = (bgColor == Graphics.COLOR_BLACK) ?
             Graphics.COLOR_WHITE : Graphics.COLOR_BLACK;
@@ -65,7 +81,6 @@ class QRDataFieldView extends WatchUi.DataField {
             }
         }
 
-        // Render
         if (!QRViewDelegate.renderQRCode(dc, mEncoder, mRenderer, mQRData, fgColor, bgColor)) {
             QRViewDelegate.drawError(dc, "QR Error", fgColor, bgColor);
         }
@@ -76,6 +91,7 @@ class QRDataFieldView extends WatchUi.DataField {
         if (!mQRData.equals(data)) {
             mQRData = data;
             mQRNeedsUpdate = true;
+            mRenderer.invalidateCache();
         }
     }
 }
