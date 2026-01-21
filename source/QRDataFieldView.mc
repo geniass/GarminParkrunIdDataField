@@ -29,9 +29,14 @@ class QRDataFieldView extends WatchUi.DataField {
 
     // Called when layout changes
     function onLayout(dc as Dc) as Void {
+        System.println("QRDataFieldView: onLayout called");
         // Only invalidate render cache, don't re-encode
+        mEncoder = new QRCode.Encoder(1, QRCode.Encoder.ERROR_LEVEL_L);
+        mRenderer = new QRCode.Renderer(mEncoder);
+
         if (mRenderer != null) {
             mRenderer.invalidateCache();
+            mRenderer.calculateLayout(dc);
         }
     }
 
@@ -41,6 +46,7 @@ class QRDataFieldView extends WatchUi.DataField {
 
     // Render the QR code
     function onUpdate(dc as Dc) as Void {
+        System.println("QRDataFieldView: onUpdate called");
         var bgColor = getBackgroundColor();
         var fgColor = (bgColor == Graphics.COLOR_BLACK) ?
             Graphics.COLOR_WHITE : Graphics.COLOR_BLACK;
@@ -48,9 +54,10 @@ class QRDataFieldView extends WatchUi.DataField {
         // Encode QR if needed (synchronous - data fields can't use timers)
         if (mQRNeedsUpdate || mEncoder == null) {
             // Have to use Version 1 (21x21) due to data field processing time constraints
-            mEncoder = QRViewDelegate.createEncoder(mQRData, 1, QRCode.Encoder.ERROR_LEVEL_L);
+            // mEncoder = QRViewDelegate.createEncoder(mQRData, 1, QRCode.Encoder.ERROR_LEVEL_L);
+            mEncoder.encode(mQRData);
             if (mEncoder != null) {
-                mRenderer = new QRCode.Renderer(mEncoder);
+                // mRenderer = new QRCode.Renderer(mEncoder);
                 mQRNeedsUpdate = false;
             } else {
                 QRViewDelegate.drawError(dc, "QR Error", fgColor, bgColor);

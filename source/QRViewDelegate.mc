@@ -1,5 +1,6 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.System;
 
 using QRCode;
 
@@ -19,6 +20,7 @@ module QRViewDelegate {
     function renderQRCode(dc as Dc, encoder as QRCode.Encoder?, renderer as QRCode.Renderer?,
                           data as String, fgColor as ColorValue, bgColor as ColorValue) as Boolean {
         if (encoder == null || renderer == null) {
+            System.println("QRViewDelegate: renderQRCode called with null encoder or renderer");
             return false;
         }
 
@@ -28,19 +30,6 @@ module QRViewDelegate {
         // Draw QR code with label (handles caching internally)
         renderer.drawWithLabel(dc, data);
         return true;
-    }
-
-    // Create and encode a new QR code
-    // @param data The data to encode
-    // @param version QR code version (1-3)
-    // @param errorLevel Error correction level
-    // @return The encoder if successful, null otherwise
-    function createEncoder(data as String, version as Number, errorLevel as Number) as QRCode.Encoder? {
-        var encoder = new QRCode.Encoder(version, errorLevel);
-        if (encoder.encode(data)) {
-            return encoder;
-        }
-        return null;
     }
 
     // Draw an error message centered on screen
