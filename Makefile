@@ -7,7 +7,7 @@ MONKEYC ?= $(SDK_HOME)/bin/monkeyc
 MONKEYDO ?= $(SDK_HOME)/bin/monkeydo
 
 # Project configuration
-PRODUCT ?= vivoactive5
+PRODUCT ?= fr255
 APP_NAME = qr-data-field
 WATCHAPP_NAME = qr-watch-app
 PRIVATE_KEY ?= ./developer_key
