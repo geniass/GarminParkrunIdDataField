@@ -1,13 +1,32 @@
-developer_key
-samples/
-mir/
+# Connect IQ build output
 bin/
+gen/
 *.prg
 *.prg.debug.xml
-gen/
+*.iq
+
+# Device-specific build dirs
 *-mir/
+mir/
+
+# VS Code
+.vscode/
+
+# Settings exports
+*-settings.json
+
+# Developer key
+developer_key
+
+# Samples
+samples/
+
+# Python
 *.pyc
 __pycache__/
+
+# macOS
 .DS_Store
-/tmp/qr_ref_*.png
+
+# Misc
 *.zip
