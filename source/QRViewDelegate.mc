@@ -4,39 +4,22 @@ import Toybox.System;
 
 using QRCode;
 
-// Shared QR code display logic used by both data field and standalone app views
-// This module contains the common rendering functionality
 module QRViewDelegate {
 
-    // Render the QR code with optional label
-    // Uses cached bitmap rendering - expensive O(n²) drawing only happens
-    // when colors, size, or data changes
-    // @param dc Device context
-    // @param encoder QR code encoder (already encoded)
-    // @param renderer QR code renderer
-    // @param data The data string to display as label
-    // @param fgColor Foreground color
-    // @param bgColor Background color
+    // Renderer caches the bitmap; the expensive O(n²) draw only runs when
+    // colors, size, or data have actually changed.
     function renderQRCode(dc as Dc, encoder as QRCode.Encoder?, renderer as QRCode.Renderer?,
-                          data as String, fgColor as ColorValue, bgColor as ColorValue) as Boolean {
+                          label as String, fgColor as ColorValue, bgColor as ColorValue) as Boolean {
         if (encoder == null || renderer == null) {
             System.println("QRViewDelegate: renderQRCode called with null encoder or renderer");
             return false;
         }
 
-        // Set colors (invalidates cache if changed)
         renderer.setColors(fgColor, bgColor);
-
-        // Draw QR code with label (handles caching internally)
-        renderer.drawWithLabel(dc, data);
+        renderer.drawWithLabel(dc, label);
         return true;
     }
 
-    // Draw an error message centered on screen
-    // @param dc Device context
-    // @param message Error message to display
-    // @param fgColor Foreground color
-    // @param bgColor Background color
     function drawError(dc as Dc, message as String, fgColor as ColorValue, bgColor as ColorValue) as Void {
         dc.setColor(fgColor, bgColor);
         dc.clear();

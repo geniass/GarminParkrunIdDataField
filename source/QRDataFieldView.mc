@@ -5,9 +5,8 @@ import Toybox.WatchUi;
 
 using QRCode;
 
-// QR Code Data Field View
 // Displays QR code as a data field during activities
-// Note: Data fields cannot use Timers, so this uses synchronous encoding
+// Data fields cannot use Timers, so QR encoding runs synchronously in onUpdate.
 class QRDataFieldView extends WatchUi.DataField {
 
     // QR code components
@@ -23,8 +22,8 @@ class QRDataFieldView extends WatchUi.DataField {
     hidden var mLastHeight as Number = 0;
 
     // Minimum size for a scannable QR code (pixels)
-    // Version 1 QR = 21 modules + 4 quiet zone = 25, need ~4px per module minimum
-    // Min size here is slightly bigger to allow some margin
+    // Version 1 QR is 21 modules + 4-module quiet zone = 25, and needs ~4px per
+    // module to scan reliably. The threshold is set slightly higher for margin.
     // TODO: handle layouts where width != height
     hidden const MIN_QR_SIZE = 150;
     hidden var mTooSmall as Boolean = false;
