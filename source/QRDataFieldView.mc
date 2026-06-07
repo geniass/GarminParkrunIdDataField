@@ -76,18 +76,20 @@ class QRDataFieldView extends WatchUi.DataField {
 
     // Render the QR code
     function onUpdate(dc as Dc) as Void {
-        var bgColor = getBackgroundColor();
-        var fgColor = (bgColor == Graphics.COLOR_BLACK) ?
+        // Theme colors for error/status text only — these follow the data
+        // field's current theme so messages look natural.
+        var dfBg = getBackgroundColor();
+        var dfFg = (dfBg == Graphics.COLOR_BLACK) ?
             Graphics.COLOR_WHITE : Graphics.COLOR_BLACK;
 
         // Show message if field is too small for scannable QR code
         if (mTooSmall) {
-            QRViewDelegate.drawError(dc, "Use single\nfield layout", fgColor, bgColor);
+            QRViewDelegate.drawError(dc, "Use single\nfield layout", dfFg, dfBg);
             return;
         }
 
         if (mEncoder == null || mRenderer == null) {
-            QRViewDelegate.drawError(dc, "QR Error", fgColor, bgColor);
+            QRViewDelegate.drawError(dc, "QR Error", dfFg, dfBg);
             return;
         }
 
@@ -96,7 +98,11 @@ class QRDataFieldView extends WatchUi.DataField {
             mQRNeedsUpdate = false;
         }
 
-        QRViewDelegate.renderQRCode(dc, mEncoder, mRenderer, mQRData, fgColor, bgColor);
+        // Scanners require dark-on-light. On AMOLED activity screens the data
+        // field background is black, so matching the theme would produce an
+        // unscannable negative — force black/white for the QR itself.
+        QRViewDelegate.renderQRCode(dc, mEncoder, mRenderer, mQRData,
+            Graphics.COLOR_BLACK, Graphics.COLOR_WHITE);
     }
 
     function setQRData(data as String) as Void {

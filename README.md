@@ -46,6 +46,10 @@ make publish
 2. Add it to an activity profile as a data field
 3. The QR code will display during your activity
 
+## Display behaviour on AMOLED watches
+
+On AMOLED devices (Epix Pro 2, Venu, Vivoactive 5/6, Instinct 3 AMOLED, MARQ 2, etc.) the activity screen uses a dark theme, but the QR code itself is always rendered as black modules on a white square regardless of theme. Barcode scanners — including the Parkrun app — require dark-on-light to read the code; matching the surrounding dark theme would produce a photographic negative that scanners read as either unreadable or wrong data. The white square in the middle of an otherwise dark screen is intentional.
+
 ## Project Structure
 
 ```
