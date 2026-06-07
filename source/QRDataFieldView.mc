@@ -51,14 +51,13 @@ class QRDataFieldView extends WatchUi.DataField {
         mLastWidth = width;
         mLastHeight = height;
 
-        // Check if field is suitable for a scannable QR code. Multi-field
-        // layouts give a non-square dc; even when both dimensions exceed the
-        // minimum, the QR ends up using only the inscribed square and the
-        // remaining space is wasted. Prefer a single-field (square) layout.
+        // Check if field is too small for a scannable QR code. The renderer
+        // sizes the QR off the smaller dimension, so it's the minimum that
+        // matters — non-square slots just produce a smaller centered QR.
         var minDimension = (width < height) ? width : height;
-        mTooSmall = (minDimension < MIN_QR_SIZE) || (width != height);
+        mTooSmall = (minDimension < MIN_QR_SIZE);
         if (mTooSmall) {
-            System.println("QRDataFieldView: Field unsuitable (" + width + "x" + height + ", min " + MIN_QR_SIZE + "px square)");
+            System.println("QRDataFieldView: Field too small (" + minDimension + "px < " + MIN_QR_SIZE + "px)");
             return;
         }
 
