@@ -86,31 +86,26 @@ class QRDataFieldView extends WatchUi.DataField {
             return;
         }
 
-        // Encode QR if needed (synchronous - data fields can't use timers)
-        if (mQRNeedsUpdate || mEncoder == null) {
-            // Have to use Version 1 (21x21) due to data field processing time constraints
-            // mEncoder = QRViewDelegate.createEncoder(mQRData, 1, QRCode.Encoder.ERROR_LEVEL_L);
-            mEncoder.encode(mQRData);
-            if (mEncoder != null) {
-                // mRenderer = new QRCode.Renderer(mEncoder);
-                mQRNeedsUpdate = false;
-            } else {
-                QRViewDelegate.drawError(dc, "QR Error", fgColor, bgColor);
-                return;
-            }
+        if (mEncoder == null || mRenderer == null) {
+            QRViewDelegate.drawError(dc, "QR Error", fgColor, bgColor);
+            return;
         }
 
-        if (!QRViewDelegate.renderQRCode(dc, mEncoder, mRenderer, mQRData, fgColor, bgColor)) {
-            QRViewDelegate.drawError(dc, "QR Error", fgColor, bgColor);
+        if (mQRNeedsUpdate) {
+            mEncoder.encode(mQRData);
+            mQRNeedsUpdate = false;
         }
+
+        QRViewDelegate.renderQRCode(dc, mEncoder, mRenderer, mQRData, fgColor, bgColor);
     }
 
-    // Allow external setting of QR data
     function setQRData(data as String) as Void {
         if (!mQRData.equals(data)) {
             mQRData = data;
             mQRNeedsUpdate = true;
-            mRenderer.invalidateCache();
+            if (mRenderer != null) {
+                mRenderer.invalidateCache();
+            }
         }
     }
 }

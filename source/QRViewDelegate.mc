@@ -8,13 +8,8 @@ module QRViewDelegate {
 
     // Renderer caches the bitmap; the expensive O(n²) draw only runs when
     // colors, size, or data have actually changed.
-    function renderQRCode(dc as Dc, encoder as QRCode.Encoder?, renderer as QRCode.Renderer?,
+    function renderQRCode(dc as Dc, encoder as QRCode.Encoder, renderer as QRCode.Renderer,
                           label as String, fgColor as ColorValue, bgColor as ColorValue) as Boolean {
-        if (encoder == null || renderer == null) {
-            System.println("QRViewDelegate: renderQRCode called with null encoder or renderer");
-            return false;
-        }
-
         renderer.setColors(fgColor, bgColor);
         renderer.drawWithLabel(dc, label);
         return true;
